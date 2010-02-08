@@ -1,6 +1,9 @@
 import pylast
 import lastfmapi
 
+# IMPORTANT: make a python module lastfmapi with a class Api that initializes instance variables used below, and provide your own data. 
+# will be changed to reading a settings file very soon
+
 api = lastfmapi.Api()
 network = pylast.get_lastfm_network(api_key = api.API_KEY, api_secret = api.API_SECRET, username = api.username, password_hash = api.password_hash)
 
