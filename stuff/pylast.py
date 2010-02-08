@@ -19,6 +19,9 @@
 # USA
 #
 # http://code.google.com/p/pylast/
+
+# --------
+# some changes by Peter Holzkorn
     
 __version__ = '0.4'
 __author__ = 'Amr Hassan'
