@@ -1,7 +1,7 @@
 import pylast
-import lasfmapi
+import lastfmapi
 
-api = lasfmapi.Api()
+api = lastfmapi.Api()
 network = pylast.get_lastfm_network(api_key = api.API_KEY, api_secret = api.API_SECRET, username = api.username, password_hash = api.password_hash)
 
 # guess & print guessed age of the user 'preflex'
