@@ -1,6 +1,13 @@
 import pylast
 import lastfmapi
 
+def getFromUserDOM(dom, tag):
+    text = dom.firstChild.getElementsByTagName(tag)[0].firstChild
+    if text != None:
+        return text.data
+    else:
+        return 0
+
 # IMPORTANT: make a python module lastfmapi with a class Api that initializes instance variables used below, and provide your own data. 
 # will be changed to reading a settings file very soon
 
@@ -17,11 +24,14 @@ network = pylast.get_lastfm_network(api_key = api.API_KEY, api_secret = api.API_
 #   weight_i_j ....... last.fm's weight attributed to fan j with regard to artist i
 
 me = network.get_user('preflex')
-mytopartists = me.get_top_artists()
+mytopartists = me.get_top_artists()[0:10]
 
 sum_playcount = 0
 sum_playcountavgage = 0
 my_inferred_age = 0
+
+countries = {}
+countryset = set()
 
 for artist_weight in mytopartists:
   #  print artist_weight
@@ -34,28 +44,83 @@ for artist_weight in mytopartists:
     sum_weight = 0
     avg_age_weighted = 0
     
+    countries[artist] = [weight, []] 
+    
     for fan_weight in fans:
         fan = fan_weight['item']
-        weight = fan_weight['weight']
-        age = fan.get_age()
+        fweight = fan_weight['weight']
+        info = fan.get_info()
+        # we get 
+        
+        age = int(getFromUserDOM(info, "age"))
+        country = getFromUserDOM(info, "country")
+        if country != 0:
+            countries[artist][1].append( (country, fweight) )
+            countryset.add(country)
+        
         #print age
         if age != 0:
-            sum_ageweight += age * weight
-            sum_weight += weight
-            
+            sum_ageweight += age * fweight
+            sum_weight += fweight
+    
+   # print countries[artist]
+    
     if sum_weight == 0:
         sum_weight = 1
         
     avg_age_weighted = sum_ageweight / sum_weight
     print "weighted avg age: %d" %(avg_age_weighted)
     
-    sum_playcount += weight
-    sum_playcountavgage += weight * avg_age_weighted
+    sum_playcount += int(weight)
+    sum_playcountavgage += int(weight) * avg_age_weighted
     
 if sum_playcount == 0:
     sum_playcount = 1
     
 my_inferred_age = sum_playcountavgage / sum_playcount
 print "i guess %s is %d years old" %(me.get_name(), my_inferred_age)
+
+#print countries
+#print countryset
+
+## now look at all countries that my fav artists' top fans are from
+## for each country, sum the fan weights of top fans of every artist and weight it by the relative importance of that artist among my favourites
+## take the sum of those weights and rank the countries by their scores
+
+countryscores = []
     
+for country in countryset:
+    score = 0
+  #  print country
     
+    for artist in countries:
+        playcount_list = countries[artist]
+        playcount = playcount_list[0]
+        clist = playcount_list[1]
+        pc = int(playcount)
+        factor = float(pc)/float(sum_playcount)
+   #     print "factor %f" % (factor) 
+        
+        sum_country_weights = 0
+        for country_weight in clist:
+           # print country_weight
+          #  print "........"
+            if country_weight[0] == country:
+             #   print "added"
+                sum_country_weights += country_weight[1]
+    
+   #     print (factor * sum_country_weights)
+        score += factor * sum_country_weights
+        
+    
+    countryscores.append( (country, score) )
+  
+
+sortedscores = sorted(countryscores, key = lambda c_s : c_s[1], reverse = True)
+
+#print sortedscores
+## calculare the probability that user is from a particular country, for the top five countries
+totalscores = sum(map(lambda x : x[1], sortedscores))
+for item in sortedscores[0:5]:
+    relative = float(item[1]) / float(totalscores)
+    print "chance of %s being from %s: %f%%" % (me.get_name(), item[0].encode('latin-1'), relative * 100)

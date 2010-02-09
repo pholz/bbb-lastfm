@@ -19,9 +19,6 @@
 # USA
 #
 # http://code.google.com/p/pylast/
-
-# --------
-# some changes by Peter Holzkorn
     
 __version__ = '0.4'
 __author__ = 'Amr Hassan'
@@ -3047,6 +3044,13 @@ class User(_BaseObject):
         doc = self._request("user.getInfo", True, {"user": self.name})
 
         return _number(_extract(doc, "age"))
+        
+    def get_info(self):
+        """Returns the user's age."""
+
+        doc = self._request("user.getInfo", True, {"user": self.name})
+
+        return doc
 
 class AuthenticatedUser(User):
     def __init__(self, network):
