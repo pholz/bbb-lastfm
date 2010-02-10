@@ -33,8 +33,12 @@ my_inferred_age = 0
 countries = {}
 countryset = set()
 
+## sum ( pcA * sum (genAF * weightAF) / totalWeightA ) ) / totalPCA
+
+sum_playcountavggender = 0
+
 for artist_weight in mytopartists:
-  #  print artist_weight
+
     artist = artist_weight['item']
     weight = artist_weight['weight']
     print "%s x %s" %(artist.get_name().encode('latin-1'), weight.encode('latin-1'))
@@ -43,6 +47,10 @@ for artist_weight in mytopartists:
     sum_ageweight = 0
     sum_weight = 0
     avg_age_weighted = 0
+    
+    sum_genweight = 0
+    avg_gen_weighted = 0
+    sum_weight_gen = 0
     
     countries[artist] = [weight, []] 
     
@@ -54,6 +62,7 @@ for artist_weight in mytopartists:
         
         age = int(getFromUserDOM(info, "age"))
         country = getFromUserDOM(info, "country")
+        gender = getFromUserDOM(info, "gender")
         if country != 0:
             countries[artist][1].append( (country, fweight) )
             countryset.add(country)
@@ -62,17 +71,33 @@ for artist_weight in mytopartists:
         if age != 0:
             sum_ageweight += age * fweight
             sum_weight += fweight
-    
-   # print countries[artist]
+            
+        if gender != 0:
+            numgen = 0
+            if gender == 'f':
+                numgen = 1
+            sum_genweight += numgen * fweight
+            sum_weight_gen += fweight
+        
+        
     
     if sum_weight == 0:
         sum_weight = 1
         
+    if sum_weight_gen == 0:
+        sum_weight_gen = 1
+    
+    
+        
     avg_age_weighted = sum_ageweight / sum_weight
     print "weighted avg age: %d" %(avg_age_weighted)
     
+    avg_gen_weighted = float(sum_genweight) / float(sum_weight_gen)
+    print "weighted avg gender: %f" %(avg_gen_weighted)
+    
     sum_playcount += int(weight)
     sum_playcountavgage += int(weight) * avg_age_weighted
+    sum_playcountavggender += int(weight) * avg_gen_weighted
     
 if sum_playcount == 0:
     sum_playcount = 1
@@ -80,8 +105,8 @@ if sum_playcount == 0:
 my_inferred_age = sum_playcountavgage / sum_playcount
 print "i guess %s is %d years old" %(me.get_name(), my_inferred_age)
 
-#print countries
-#print countryset
+my_inferred_gender = float(sum_playcountavggender) / float(sum_playcount)
+print "%f%% chance that %s is female" %(my_inferred_gender * 100, me.get_name())
 
 ## now look at all countries that my fav artists' top fans are from
 ## for each country, sum the fan weights of top fans of every artist and weight it by the relative importance of that artist among my favourites
@@ -99,26 +124,19 @@ for country in countryset:
         clist = playcount_list[1]
         pc = int(playcount)
         factor = float(pc)/float(sum_playcount)
-   #     print "factor %f" % (factor) 
         
         sum_country_weights = 0
         for country_weight in clist:
-           # print country_weight
-          #  print "........"
             if country_weight[0] == country:
-             #   print "added"
                 sum_country_weights += country_weight[1]
     
-   #     print (factor * sum_country_weights)
         score += factor * sum_country_weights
-        
-    
+
     countryscores.append( (country, score) )
   
 
 sortedscores = sorted(countryscores, key = lambda c_s : c_s[1], reverse = True)
 
-#print sortedscores
 ## calculare the probability that user is from a particular country, for the top five countries
 totalscores = sum(map(lambda x : x[1], sortedscores))
 for item in sortedscores[0:5]:
