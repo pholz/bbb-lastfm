@@ -1,5 +1,7 @@
 import pylast
-import lastfmapi
+import cPickle
+import sys
+import ConfigParser
 
 def getFromUserDOM(dom, tag):
     text = dom.firstChild.getElementsByTagName(tag)[0].firstChild
@@ -7,12 +9,19 @@ def getFromUserDOM(dom, tag):
         return text.data
     else:
         return 0
+        
+def getArtistFromName(name):
+    a = pylast.Artist(name,network)
+    return a
 
-# IMPORTANT: make a python module lastfmapi with a class Api that initializes instance variables used below, and provide your own data. 
-# will be changed to reading a settings file very soon
+cfg = ConfigParser.ConfigParser()
+cfg.read('settings.ini')
+API_KEY = cfg.get('API','API_KEY')
+API_SECRET = cfg.get('API','API_SECRET')
+username = cfg.get('USER','username')
+password_hash = pylast.md5(cfg.get('USER','password'))
 
-api = lastfmapi.Api()
-network = pylast.get_lastfm_network(api_key = api.API_KEY, api_secret = api.API_SECRET, username = api.username, password_hash = api.password_hash)
+network = pylast.get_lastfm_network(api_key = API_KEY, api_secret = API_SECRET, username = username, password_hash = password_hash)
 
 # guess & print guessed age of the user 'preflex'
 # formula:
@@ -24,7 +33,28 @@ network = pylast.get_lastfm_network(api_key = api.API_KEY, api_secret = api.API_
 #   weight_i_j ....... last.fm's weight attributed to fan j with regard to artist i
 
 me = network.get_user('preflex')
-mytopartists = me.get_top_artists()[0:10]
+
+### testing
+#print getArtistFromName(u'Opeth'.encode('latin-1')).get_name()
+#print getArtistFromName(u'Sigur R\xf3s'.encode('latin-1')).get_name()
+
+NUM_ARTISTS = 5
+
+mytopartists = 0
+fromLib = False
+if len(sys.argv) < 2:
+    topartists = me.get_top_artists()[0:NUM_ARTISTS]
+    mytopartists = map(lambda dic: (dic['item'], int(dic['weight'])), topartists)
+else:
+    theFile = open('mycharts','r')
+    topartists = cPickle.load(theFile)
+  #  print topartists
+ #   for x in topartists:
+#        print type(x[0])
+  #      print x[0].decode('latin-1')
+    mytopartists = map(lambda (a, v): (getArtistFromName(a), v), topartists[0:NUM_ARTISTS])
+    fromLib = True
+    
 
 sum_playcount = 0
 sum_playcountavgage = 0
@@ -39,9 +69,10 @@ sum_playcountavggender = 0
 
 for artist_weight in mytopartists:
 
-    artist = artist_weight['item']
-    weight = artist_weight['weight']
-    print "%s x %s" %(artist.get_name().encode('latin-1'), weight.encode('latin-1'))
+    artist = artist_weight[0]
+    weight = int(artist_weight[1])
+    print artist.get_name().encode('latin-1')
+   # print "%s x %d" %(artist.get_name().encode('latin-1'), weight)
     
     fans = artist.get_top_fans()
     sum_ageweight = 0
