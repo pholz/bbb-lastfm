@@ -32,13 +32,13 @@ network = pylast.get_lastfm_network(api_key = API_KEY, api_secret = API_SECRET, 
 #   age_i_j .......... age of top fan j of artist i
 #   weight_i_j ....... last.fm's weight attributed to fan j with regard to artist i
 
-me = network.get_user('preflex')
+me = network.get_user(username)
 
 ### testing
 #print getArtistFromName(u'Opeth'.encode('latin-1')).get_name()
 #print getArtistFromName(u'Sigur R\xf3s'.encode('latin-1')).get_name()
 
-NUM_ARTISTS = 5
+NUM_ARTISTS = 3
 
 mytopartists = 0
 fromLib = False
@@ -134,10 +134,10 @@ if sum_playcount == 0:
     sum_playcount = 1
     
 my_inferred_age = sum_playcountavgage / sum_playcount
-print "i guess %s is %d years old" %(me.get_name(), my_inferred_age)
+print "i guess you are %d years old" %(my_inferred_age)
 
 my_inferred_gender = float(sum_playcountavggender) / float(sum_playcount)
-print "%f%% chance that %s is female" %(my_inferred_gender * 100, me.get_name())
+print "%f%% chance that you are female" %(my_inferred_gender * 100)
 
 ## now look at all countries that my fav artists' top fans are from
 ## for each country, sum the fan weights of top fans of every artist and weight it by the relative importance of that artist among my favourites
@@ -172,4 +172,4 @@ sortedscores = sorted(countryscores, key = lambda c_s : c_s[1], reverse = True)
 totalscores = sum(map(lambda x : x[1], sortedscores))
 for item in sortedscores[0:5]:
     relative = float(item[1]) / float(totalscores)
-    print "chance of %s being from %s: %f%%" % (me.get_name(), item[0].encode('latin-1'), relative * 100)
+    print "chance of you being from %s: %f%%" % (item[0].encode('latin-1'), relative * 100)
