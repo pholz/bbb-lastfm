@@ -12,4 +12,5 @@ network = pylast.get_lastfm_network(api_key = API_KEY, api_secret = API_SECRET, 
 
 me = network.get_user(username)
 
-print me.get_top_artists()
+for item in me.get_top_artists():
+    print type(item)

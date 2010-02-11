@@ -38,13 +38,13 @@ me = network.get_user(username)
 #print getArtistFromName(u'Opeth'.encode('latin-1')).get_name()
 #print getArtistFromName(u'Sigur R\xf3s'.encode('latin-1')).get_name()
 
-NUM_ARTISTS = 3
+NUM_ARTISTS = 5
 
 mytopartists = 0
 fromLib = False
 if len(sys.argv) < 2:
     topartists = me.get_top_artists()[0:NUM_ARTISTS]
-    print topartists
+ #   print topartists
     mytopartists = map(lambda dic: (dic['item'], int(dic['weight'])), topartists)
 else:
     theFile = open('mycharts','r')
@@ -87,7 +87,7 @@ for artist_weight in mytopartists:
     countries[artist] = [weight, []] 
     
     for fan_weight in fans:
-        print fan_weight
+  #      print fan_weight
         fan = fan_weight['item']
         fweight = fan_weight['weight']
         info = fan.get_info()
